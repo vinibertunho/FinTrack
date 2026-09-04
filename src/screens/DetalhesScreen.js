@@ -1,28 +1,27 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { gastoService } from '../services/gastoService';
 
 export default function DetalhesScreen({ visible, gasto, onClose, onEdit, onDeleteSuccess }) {
+    const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
+
     if (!gasto) return null;
 
     const handleExcluir = () => {
-        Alert.alert('Excluir Transação', 'Tem certeza que deseja apagar este registro?', [
-            { text: 'Cancelar', style: 'cancel' },
-            {
-                text: 'Excluir',
-                style: 'destructive',
-                onPress: async () => {
-                    await gastoService.remover(gasto.id);
-                    onDeleteSuccess();
-                    onClose();
-                },
-            },
-        ]);
+        setConfirmandoExclusao(true);
+    };
+
+    const confirmarExclusao = async () => {
+        await gastoService.remover(gasto.id);
+        setConfirmandoExclusao(false);
+        onDeleteSuccess();
+        onClose();
     };
 
     return (
-        <Modal visible={visible} animationType="slide">
+        <>
+            <Modal visible={visible} animationType="slide">
             <View style={styles.container}>
                 {/* Header Navegação */}
                 <View style={styles.header}>
@@ -97,7 +96,30 @@ export default function DetalhesScreen({ visible, gasto, onClose, onEdit, onDele
                     </TouchableOpacity>
                 </ScrollView>
             </View>
-        </Modal>
+            </Modal>
+            <Modal
+                visible={confirmandoExclusao}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setConfirmandoExclusao(false)}>
+                <View style={styles.confirmOverlay}>
+                    <View style={styles.confirmCard}>
+                        <Text style={styles.confirmTitle}>Excluir transação?</Text>
+                        <Text style={styles.confirmText}>Esse registro será removido permanentemente.</Text>
+                        <View style={styles.confirmButtons}>
+                            <TouchableOpacity
+                                style={styles.confirmCancel}
+                                onPress={() => setConfirmandoExclusao(false)}>
+                                <Text style={styles.confirmCancelText}>Cancelar</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity style={styles.confirmDelete} onPress={confirmarExclusao}>
+                                <Text style={styles.confirmDeleteText}>Excluir</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+        </>
     );
 }
 
@@ -165,4 +187,37 @@ const styles = StyleSheet.create({
         padding: 14,
     },
     btnDeleteText: { fontWeight: 'bold', color: '#D32F2F' },
+    confirmOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.45)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 24,
+    },
+    confirmCard: {
+        width: '100%',
+        maxWidth: 360,
+        backgroundColor: '#FFF',
+        borderRadius: 16,
+        padding: 22,
+    },
+    confirmTitle: { fontSize: 18, fontWeight: 'bold', color: '#111' },
+    confirmText: { fontSize: 14, color: '#666', marginTop: 8, marginBottom: 20 },
+    confirmButtons: { flexDirection: 'row', gap: 10 },
+    confirmCancel: {
+        flex: 1,
+        padding: 13,
+        borderRadius: 10,
+        alignItems: 'center',
+        backgroundColor: '#EAEAEA',
+    },
+    confirmCancelText: { color: '#333', fontWeight: 'bold' },
+    confirmDelete: {
+        flex: 1,
+        padding: 13,
+        borderRadius: 10,
+        alignItems: 'center',
+        backgroundColor: '#D32F2F',
+    },
+    confirmDeleteText: { color: '#FFF', fontWeight: 'bold' },
 });

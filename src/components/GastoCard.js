@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function GastoCard({ item, onPress }) {
-    const isDespesa = item.tipo === 'despesa';
+    const isDespesa = String(item.tipo).toLowerCase() === 'despesa';
 
     const getIconName = (categoria) => {
         switch (categoria) {
@@ -21,7 +21,7 @@ export default function GastoCard({ item, onPress }) {
                 <Ionicons name={getIconName(item.categoria)} size={20} color="#333" />
             </View>
             <View style={styles.info}>
-                <Text style={styles.title}>{item.descricao}</Text>
+                <Text style={styles.title}>{item.nome || item.descricao}</Text>
                 <Text style={styles.sub}>{item.data} • {item.categoria}</Text>
             </View>
             <Text style={[styles.valor, { color: isDespesa ? '#D32F2F' : '#00875A' }]}>

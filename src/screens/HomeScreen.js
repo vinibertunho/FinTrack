@@ -2,11 +2,15 @@ import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView, Image } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { gastoService } from '../services/gastoService';
 import GastoCard from '../components/GastoCard';
 
+const PROFILE_KEY = '@fintrack_perfil';
+
 export default function HomeScreen({ navigation }) {
     const [gastos, setGastos] = useState([]);
+    const [profileName, setProfileName] = useState('João');
 
     useFocusEffect(
         useCallback(() => {
@@ -15,12 +19,22 @@ export default function HomeScreen({ navigation }) {
     );
 
     const carregarGastos = async () => {
-        const data = await gastoService.getAll();
+        const data = await gastoService.listar();
         setGastos(data);
+
+        const savedProfile = await AsyncStorage.getItem(PROFILE_KEY);
+        if (savedProfile) {
+            const profile = JSON.parse(savedProfile);
+            setProfileName(profile.name?.split(' ')[0] || 'João');
+        }
     };
 
-    const entradas = gastos.filter(g => g.tipo === 'receita').reduce((acc, c) => acc + Number(c.valor), 0);
-    const saidas = gastos.filter(g => g.tipo === 'despesa').reduce((acc, c) => acc + Number(c.valor), 0);
+    const entradas = gastos
+        .filter((gasto) => String(gasto.tipo).toLowerCase() === 'receita')
+        .reduce((acc, gasto) => acc + Number(gasto.valor), 0);
+    const saidas = gastos
+        .filter((gasto) => String(gasto.tipo).toLowerCase() === 'despesa')
+        .reduce((acc, gasto) => acc + Number(gasto.valor), 0);
     const saldoTotal = entradas - saidas;
 
     return (
@@ -33,7 +47,7 @@ export default function HomeScreen({ navigation }) {
                     />
                     <View style={{ marginLeft: 10 }}>
                         <Text style={styles.greeting}>Olá,</Text>
-                        <Text style={styles.userName}>João!</Text>
+                        <Text style={styles.userName}>{profileName}!</Text>
                     </View>
                 </View>
                 <Ionicons name="notifications-outline" size={24} color="#333" />
